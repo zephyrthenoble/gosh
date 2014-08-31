@@ -1,4 +1,4 @@
-package gosh
+package main
 
 import (
 	"bufio"
@@ -26,10 +26,21 @@ func exec_loop() {
 	text, _ := reader.ReadString('\n')
     text = strings.TrimSpace(text)
     commands := ParseCommands(text)
+    for index, elem := range commands {
+        last = elem.ExecuteCommand()
+        fmt.Println(index, last)
+    }
 }
-var search_for_pipe = "(?:^||)(\"(?:[^\"]+|\"\")*\"|[^|]*)"
+func (*command) ExecuteCommand () (string) {
+    return "test"
+
+}
+var search_for_pipe = '(?:^||)(\"(?:[^\"]+|\"\")*\"|[^|]*)'
 func ParseCommands(line string) ([]command) {
-    regex, err := regexp.Compile(search_for_pipe)
+    fmt.Println("ParseCommands")
+    fmt.Println(line)
+    regex, _ := regexp.Compile(search_for_pipe)
+    fmt.Println(regex.FindAllString(search_for_pipe, 3))
     if regex.MatchString(line){
         fmt.Println("found")
     }
