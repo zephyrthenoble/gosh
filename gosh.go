@@ -4,46 +4,69 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-    "strings"
-    "regexp"
+	"strings"
+    //"regexp"
+    "os/exec"
 )
 
-var promt = "> "
+var promt = "\n> "
 var reader = bufio.NewReader(os.Stdin)
 var last = ""
+var PATH = "/usr/bin/"
+
 func main() {
     for {
-    exec_loop()
+        exec_loop()
     }
 }
+
 type command struct {
-    command string
+    command   string
     arguments string
-    input string
+    input     string
 }
+
 func exec_loop() {
-	fmt.Print(promt)
-	text, _ := reader.ReadString('\n')
+    fmt.Print(promt)
+    text, _ := reader.ReadString('\n')
     text = strings.TrimSpace(text)
-    commands := ParseCommands(text)
-    for index, elem := range commands {
-        last = elem.ExecuteCommand()
-        fmt.Println(index, last)
+    commands := SplitCommands(text)
+    for _, elem := range commands {
+        exe_cmd(elem)
     }
 }
-func (*command) ExecuteCommand () (string) {
-    return "test"
 
-}
-var search_for_pipe = '(?:^||)(\"(?:[^\"]+|\"\")*\"|[^|]*)'
-func ParseCommands(line string) ([]command) {
-    fmt.Println("ParseCommands")
-    fmt.Println(line)
-    regex, _ := regexp.Compile(search_for_pipe)
-    fmt.Println(regex.FindAllString(search_for_pipe, 3))
-    if regex.MatchString(line){
-        fmt.Println("found")
+func SplitCommands(text string) ([]string) {
+    parts := strings.Fields(text)
+    commands := []string{}
+    last := 0
+    for index, elem := range parts {
+        if elem == "|" {
+            commands = append(commands, strings.Join(parts[last:index], " "))
+            last = index + 1
+        }
     }
-
-    return make( []command, 4)
+    commands = append(commands, strings.Join(parts[last:], " "))
+    return commands
 }
+func exe_cmd(cmd string) {
+	// splitting head => g++ parts => rest of the command
+    // assume whitespace in between all commands
+    parts := strings.Fields(cmd)
+	if len(parts) == 0 {
+		return
+	}
+	head := parts[0]
+	if len(parts) > 1 {
+		parts = parts[1:len(parts)]
+	}
+
+    if head == parts[0] {
+        command, err:= exec.Command(PATH+head).CombinedOutput()
+    fmt.Println(string(command), err)
+    } else {
+        command, err:= exec.Command(PATH+head, parts...).CombinedOutput()
+    fmt.Println(string(command), err)
+    }
+}
+
